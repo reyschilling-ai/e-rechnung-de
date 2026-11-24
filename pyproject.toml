@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "e-rechnung-de"
+version = "0.1.0"
+description = "XRechnung und ZUGFeRD aus einfachen YAML-Rechnungsdaten erzeugen und offiziell prüfen"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = ["lxml>=4.9", "PyYAML>=6.0"]
+
+[project.optional-dependencies]
+test = ["pytest>=7"]
+
+[project.scripts]
+erechnung = "erechnung.cli:main"
+
+[tool.setuptools]
+packages = ["erechnung"]

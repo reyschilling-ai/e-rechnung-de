@@ -1,0 +1,40 @@
+# Beispiel: Dienstleistung an ein Unternehmen in Österreich (Reverse Charge)
+# Alle Daten sind erfunden.
+
+steuerfall: reverse_charge
+
+rechnung:
+  nummer: "2027-003"
+  datum: 2027-03-10
+  leistungsdatum: 2027-03-09
+  kaeuferreferenz: "Projekt Alpha"
+
+verkaeufer:
+  name: Erika Mustermann
+  anschrift:
+    strasse: Musterweg 1
+    plz: "12345"
+    ort: Musterstadt
+  email: rechnung@erika-mustermann.example
+  telefon: "+49 123 456789"
+  ust_id: DE123456789
+
+kaeufer:
+  name: Beispiel Consulting GmbH
+  anschrift:
+    strasse: Ringstraße 1
+    plz: "1010"
+    ort: Wien
+    land: AT
+  email: rechnungen@beispiel-consulting.example
+  ust_id: ATU12345678
+
+positionen:
+  - bezeichnung: Online-Training "GVP-Grundlagen"
+    menge: 1
+    einheit: pauschal
+    einzelpreis: 1200.00
+
+zahlung:
+  iban: DE89370400440532013000
+  ziel_tage: 14

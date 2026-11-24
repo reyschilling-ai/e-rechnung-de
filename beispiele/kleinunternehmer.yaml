@@ -1,0 +1,45 @@
+# Beispiel: Kleinunternehmer nach § 19 UStG, Kunde in Deutschland
+# Alle Daten sind erfunden.
+
+steuerfall: kleinunternehmer
+
+rechnung:
+  nummer: "2027-001"
+  datum: 2027-01-15
+  leistungsdatum: 2027-01-14
+  kaeuferreferenz: "PO-4711"        # Bestell-/PO-Nummer oder Leitweg-ID; sonst "n/a"
+
+verkaeufer:
+  name: Erika Mustermann
+  anschrift:
+    strasse: Musterweg 1
+    plz: "12345"
+    ort: Musterstadt
+    land: DE
+  email: rechnung@erika-mustermann.example
+  telefon: "+49 123 456789"
+  steuernummer: "12/345/67890"
+
+kaeufer:
+  name: Beispiel Beratung GmbH
+  anschrift:
+    strasse: Hauptstraße 10
+    plz: "60311"
+    ort: Frankfurt am Main
+    land: DE
+  email: eingangsrechnungen@beispiel-beratung.example   # Pflicht in XRechnung (BT-49)
+
+positionen:
+  - bezeichnung: Workshop "KI im Büroalltag"
+    menge: 1
+    einheit: tag
+    einzelpreis: 900.00
+  - bezeichnung: Reisekostenpauschale
+    menge: 1
+    einheit: pauschal
+    einzelpreis: 85.50
+
+zahlung:
+  iban: DE89 3704 0044 0532 0130 00
+  bic: COBADEFFXXX
+  ziel_tage: 14
