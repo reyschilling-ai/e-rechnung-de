@@ -5,7 +5,7 @@ on:
   pull_request:
 
 jobs:
-  tests:
+  python:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,3 +25,49 @@ jobs:
           key: werkzeuge-${{ hashFiles('erechnung/werkzeuge.py') }}
       - run: pip install -e ".[test]" reportlab
       - run: pytest -v
+
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Werkzeug-Cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/e-rechnung-de
+          key: werkzeuge-${{ hashFiles('erechnung/werkzeuge.py') }}
+      - name: Abhängigkeiten
+        run: |
+          cd web && npm ci
+          pip install -e . playwright
+          python -m playwright install --with-deps chromium
+      - name: Kerntests und PDF-Erzeugung (Node)
+        working-directory: web
+        run: XML_AUSGABE=/tmp/jsxml PDF_AUSGABE=/tmp/jspdf npm test
+      - name: Browser-XML gegen KoSIT
+        run: for f in /tmp/jsxml/*.xml; do erechnung pruefen "$f"; done
+      - name: Browser-PDFs gegen Mustang/veraPDF
+        run: python web/tests/pdf_pruefen.py /tmp/jspdf
+      - name: Browser-Prüfregeln identisch mit KoSIT
+        run: |
+          python web/tests/kosit_faelle.py /tmp/faelle
+          cd web && node tests/vergleich_kosit.mjs /tmp/faelle /tmp/faelle/kosit
+      - name: Ende-zu-Ende-Test im Browser
+        run: |
+          cd web && (python -m http.server 8765 --bind 127.0.0.1 &) && sleep 1
+          python tests/e2e.py http://127.0.0.1:8765 /tmp/e2e
+          cd .. && python web/tests/pdf_pruefen.py /tmp/e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-ergebnisse
+          path: /tmp/e2e

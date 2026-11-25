@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lizenzen – E-Rechnung</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<main>
+  <div class="karte">
+    <h2>Lizenzen</h2>
+    <p>Der Code dieser Seite steht unter der MIT-Lizenz: <a href="https://github.com/reyschilling-ai/e-rechnung-de">github.com/reyschilling-ai/e-rechnung-de</a>.</p>
+    <p>Die Seite nutzt folgende Bestandteile Dritter, jeweils unverändert oder als technisch umgewandelte Fassung:</p>
+    <table class="tabelle">
+      <thead><tr><th>Bestandteil</th><th>Verwendung</th><th>Lizenz</th></tr></thead>
+      <tbody>
+        <tr><td><a href="https://github.com/ConnectingEurope/eInvoicing-EN16931">EN 16931 Validation Artefacts (CII)</a>, CEN/TC 434, über die KoSIT-Konfiguration</td><td>Prüfregeln, umgewandelt in <code>regeln/regeln.json</code></td><td>EUPL 1.2</td></tr>
+        <tr><td><a href="https://github.com/itplr-kosit/xrechnung-schematron">XRechnung Schematron</a> und <a href="https://github.com/itplr-kosit/validator-configuration-xrechnung">Validator-Konfiguration XRechnung</a>, KoSIT</td><td>Prüfregeln, umgewandelt in <code>regeln/regeln.json</code></td><td>Apache 2.0</td></tr>
+        <tr><td><a href="https://github.com/FontoXML/fontoxpath">fontoxpath</a>, xspattern, prsc</td><td>Auswertung der Prüfregeln (XPath 3.1)</td><td>MIT</td></tr>
+        <tr><td><a href="https://github.com/Hopding/pdf-lib">pdf-lib</a>, @pdf-lib/fontkit</td><td>PDF-Erzeugung</td><td>MIT</td></tr>
+        <tr><td><a href="https://github.com/liberationfonts/liberation-fonts">Liberation Sans</a></td><td>Schrift in der PDF</td><td>SIL Open Font License 1.1</td></tr>
+        <tr><td>sRGB-Farbprofil (IEC 61966-2.1), Graeme W. Gill</td><td>Farbprofil der PDF/A</td><td>Public Domain</td></tr>
+      </tbody>
+    </table>
+    <p class="klein">Die abgeleitete Regeldatei <code>regeln/regeln.json</code> enthält Regeln aus den EN-16931-Artefakten und steht daher, soweit sie diese enthält, unter der EUPL 1.2. Das Umwandlungsskript liegt unter <code>regeln/extract_rules.py</code>. Einzige inhaltliche Anpassung: Die IBAN-Prüfziffer (BR-DE-19) wird ziffernweise berechnet, weil der verwendete XPath-Interpreter keine beliebig großen Ganzzahlen kennt. Das Ergebnis ist gleichwertig.</p>
+    <p><a href="index.html">Zurück zum Werkzeug</a></p>
+  </div>
+</main>
+</body>
+</html>

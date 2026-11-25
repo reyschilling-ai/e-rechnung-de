@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>E-Rechnung schreiben – XRechnung & ZUGFeRD im Browser</title>
+<meta name="description" content="Rechnungen und E-Rechnungen (XRechnung, ZUGFeRD) direkt im Browser schreiben und offiziell prüfen. Kostenlos, Open Source, ohne Server – die Daten verlassen den Rechner nicht.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f4e5f'/%3E%3Cpath d='M9 8h11l4 4v12H9z' fill='%23fff'/%3E%3Cpath d='M12 15h9M12 19h9' stroke='%231f4e5f' stroke-width='2'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<header class="kopf">
+  <div class="kopf-innen">
+    <div class="marke">
+      <span class="logo" aria-hidden="true"></span>
+      <div>
+        <h1>E-Rechnung</h1>
+        <p class="unterzeile">XRechnung und ZUGFeRD direkt im Browser. Ihre Daten bleiben auf diesem Gerät.</p>
+      </div>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Bereiche">
+      <button role="tab" data-tab="rechnung" aria-selected="true">Rechnung schreiben</button>
+      <button role="tab" data-tab="liste" aria-selected="false">Rechnungen</button>
+      <button role="tab" data-tab="kunden" aria-selected="false">Kunden</button>
+      <button role="tab" data-tab="profil" aria-selected="false">Meine Daten</button>
+    </nav>
+  </div>
+</header>
+
+<div id="banner" class="banner" hidden></div>
+
+<main>
+  <!-- ============ Rechnung schreiben ============ -->
+  <section id="tab-rechnung" class="tab" role="tabpanel">
+    <div class="raster">
+      <form id="form-rechnung" class="spalte-haupt" autocomplete="off" novalidate>
+        <div class="karte">
+          <div class="karte-kopf">
+            <h2>Kunde</h2>
+            <div class="aktionen-klein">
+              <label class="knopf-klein" title="Eine früher erstellte XRechnung (XML) als Vorlage laden">
+                XRechnung einlesen <input type="file" id="import-xml" accept=".xml,text/xml,application/xml" hidden>
+              </label>
+            </div>
+          </div>
+          <div class="feldreihe">
+            <label class="feld breit">Aus Kundenliste
+              <select id="kunde-auswahl"><option value="">– neuer Kunde –</option></select>
+            </label>
+          </div>
+          <div class="feldreihe">
+            <label class="feld breit">Name / Firma<input name="k.name" required></label>
+          </div>
+          <div class="feldreihe">
+            <label class="feld breit">Straße und Hausnummer<input name="k.strasse"></label>
+            <label class="feld">Adresszusatz<input name="k.zusatz"></label>
+          </div>
+          <div class="feldreihe">
+            <label class="feld schmal">PLZ<input name="k.plz" inputmode="numeric"></label>
+            <label class="feld">Ort<input name="k.ort"></label>
+            <label class="feld schmal">Land<input name="k.land" value="DE" maxlength="2"></label>
+          </div>
+          <div class="feldreihe">
+            <label class="feld">E-Mail für Rechnungseingang<input name="k.email" type="email" placeholder="rechnungen@kunde.de"></label>
+            <label class="feld">USt-IdNr. des Kunden<input name="k.ustId" placeholder="nur bei Reverse Charge nötig"></label>
+          </div>
+          <label class="haken"><input type="checkbox" id="kunde-merken" checked> Kunde in der Kundenliste speichern bzw. aktualisieren</label>
+        </div>
+
+        <div class="karte">
+          <h2>Rechnungsdaten</h2>
+          <div class="feldreihe">
+            <label class="feld">Rechnungsnummer<input name="nummer"></label>
+            <label class="feld">Rechnungsdatum<input name="datum" type="date"></label>
+            <label class="feld">Zahlungsziel (Tage)<input name="zielTage" type="number" min="0" step="1"></label>
+          </div>
+          <div class="feldreihe">
+            <label class="feld">Leistung erbracht am<input name="leistungsdatum" type="date"></label>
+            <span class="oder">oder Zeitraum</span>
+            <label class="feld">von<input name="zeitraumVon" type="date"></label>
+            <label class="feld">bis<input name="zeitraumBis" type="date"></label>
+          </div>
+          <div class="feldreihe">
+            <label class="feld">Ihre Referenz / Leitweg-ID<input name="kaeuferreferenz" placeholder="Bestell- oder PO-Nummer des Kunden"></label>
+            <label class="feld">Bestellnummer<input name="bestellnummer"></label>
+          </div>
+          <div class="feldreihe">
+            <label class="feld breit">Umsatzsteuer
+              <select name="steuerfall">
+                <option value="regulaer">Regelbesteuert (Umsatzsteuer ausweisen)</option>
+                <option value="kleinunternehmer">Kleinunternehmer nach § 19 UStG (keine Umsatzsteuer)</option>
+                <option value="reverse_charge">Reverse Charge (Kunde im EU-Ausland)</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div class="karte">
+          <div class="karte-kopf"><h2>Positionen</h2></div>
+          <div class="positionen" id="positionen"></div>
+          <button type="button" class="knopf-zweit" id="position-neu">+ Position hinzufügen</button>
+        </div>
+
+        <details class="karte">
+          <summary><h2>Texte (optional)</h2></summary>
+          <label class="feld breit">Einleitung über den Positionen<textarea name="anschreiben" rows="2" placeholder="z. B. Für meine Leistungen erlaube ich mir zu berechnen:"></textarea></label>
+          <label class="feld breit">Zusätzliche Hinweise<textarea name="hinweisText" rows="2"></textarea></label>
+          <label class="feld breit">Schlusstext<textarea name="schlusstext" rows="2" placeholder="z. B. Vielen Dank für die gute Zusammenarbeit."></textarea></label>
+        </details>
+      </form>
+
+      <aside class="spalte-seite">
+        <div class="karte klebrig">
+          <h2>Übersicht</h2>
+          <dl class="summen" id="summen"></dl>
+          <fieldset class="format">
+            <legend>Ausgabe</legend>
+            <label class="wahl"><input type="radio" name="format" value="zugferd" checked>
+              <span><strong>E-Rechnung</strong> (ZUGFeRD-PDF mit XRechnung)</span></label>
+            <label class="wahl"><input type="radio" name="format" value="pdf">
+              <span><strong>Nur PDF</strong> (z. B. für Privatkunden)</span></label>
+          </fieldset>
+          <div id="pruefliste" class="pruefliste" aria-live="polite"></div>
+          <button type="button" class="knopf" id="erstellen">Prüfen und PDF erstellen</button>
+          <button type="button" class="knopf-zweit" id="nur-xml">Nur XRechnung (XML) herunterladen</button>
+          <button type="button" class="knopf-text" id="formular-leeren">Formular leeren</button>
+          <p class="klein" id="status-laden"></p>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============ Rechnungen ============ -->
+  <section id="tab-liste" class="tab" role="tabpanel" hidden>
+    <div class="karte">
+      <div class="karte-kopf">
+        <h2>Rechnungen</h2>
+        <div class="filter">
+          <select id="filter-jahr" aria-label="Jahr"></select>
+          <select id="filter-status" aria-label="Status">
+            <option value="">alle</option><option value="offen">offen</option>
+            <option value="ueberfaellig">überfällig</option><option value="bezahlt">bezahlt</option>
+          </select>
+        </div>
+      </div>
+      <div class="kennzahlen" id="kennzahlen"></div>
+      <div class="tabelle-huelle"><table class="tabelle" id="tabelle-rechnungen"></table></div>
+      <p class="leer" id="liste-leer" hidden>Noch keine Rechnungen. Die erste erstellen Sie unter „Rechnung schreiben“.</p>
+    </div>
+  </section>
+
+  <!-- ============ Kunden ============ -->
+  <section id="tab-kunden" class="tab" role="tabpanel" hidden>
+    <div class="raster">
+      <div class="spalte-haupt karte">
+        <div class="karte-kopf"><h2>Kunden</h2><button class="knopf-zweit" id="kunde-neu" type="button">+ Neuer Kunde</button></div>
+        <div class="tabelle-huelle"><table class="tabelle" id="tabelle-kunden"></table></div>
+        <p class="leer" id="kunden-leer" hidden>Noch keine Kunden gespeichert.</p>
+      </div>
+      <form class="spalte-seite karte" id="form-kunde" hidden autocomplete="off">
+        <h2 id="kunde-form-titel">Kunde</h2>
+        <label class="feld breit">Name / Firma<input name="name" required></label>
+        <label class="feld breit">Straße und Hausnummer<input name="strasse"></label>
+        <label class="feld breit">Adresszusatz<input name="zusatz"></label>
+        <div class="feldreihe">
+          <label class="feld schmal">PLZ<input name="plz"></label>
+          <label class="feld">Ort<input name="ort"></label>
+          <label class="feld schmal">Land<input name="land" maxlength="2" value="DE"></label>
+        </div>
+        <label class="feld breit">E-Mail für Rechnungseingang<input name="email" type="email"></label>
+        <label class="feld breit">USt-IdNr.<input name="ustId"></label>
+        <label class="feld breit">Standard-Referenz / Leitweg-ID<input name="kaeuferreferenz"></label>
+        <label class="feld breit">Notiz<textarea name="notiz" rows="2"></textarea></label>
+        <div class="knopfreihe">
+          <button class="knopf" type="submit">Speichern</button>
+          <button class="knopf-zweit" type="button" id="kunde-rechnung">Rechnung schreiben</button>
+          <button class="knopf-text gefahr" type="button" id="kunde-loeschen">Löschen</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- ============ Meine Daten ============ -->
+  <section id="tab-profil" class="tab" role="tabpanel" hidden>
+    <div class="raster">
+      <form class="spalte-haupt" id="form-profil" autocomplete="on">
+        <div class="karte">
+          <h2>Absender</h2>
+          <div class="feldreihe">
+            <label class="feld breit">Name / Firma<input name="name" autocomplete="organization"></label>
+            <label class="feld">Ansprechperson<input name="kontaktName" autocomplete="name"></label>
+          </div>
+          <div class="feldreihe">
+            <label class="feld breit">Straße und Hausnummer<input name="strasse" autocomplete="street-address"></label>
+          </div>
+          <div class="feldreihe">
+            <label class="feld schmal">PLZ<input name="plz" autocomplete="postal-code"></label>
+            <label class="feld">Ort<input name="ort" autocomplete="address-level2"></label>
+            <label class="feld schmal">Land<input name="land" maxlength="2" value="DE"></label>
+          </div>
+          <div class="feldreihe">
+            <label class="feld">E-Mail<input name="email" type="email" autocomplete="email"></label>
+            <label class="feld">Telefon<input name="telefon" autocomplete="tel"></label>
+            <label class="feld">Website<input name="web"></label>
+          </div>
+        </div>
+        <div class="karte">
+          <h2>Steuer und Bank</h2>
+          <div class="feldreihe">
+            <label class="feld">Steuernummer<input name="steuernummer"></label>
+            <label class="feld">USt-IdNr.<input name="ustId"></label>
+          </div>
+          <div class="feldreihe">
+            <label class="feld breit">IBAN<input name="iban" autocomplete="off"></label>
+            <label class="feld">BIC<input name="bic"></label>
+          </div>
+          <div class="feldreihe">
+            <label class="feld">Kontoinhaber (falls abweichend)<input name="kontoinhaber"></label>
+          </div>
+        </div>
+        <div class="karte">
+          <h2>Voreinstellungen</h2>
+          <div class="feldreihe">
+            <label class="feld breit">Umsatzsteuer
+              <select name="steuerfall">
+                <option value="regulaer">Regelbesteuert</option>
+                <option value="kleinunternehmer">Kleinunternehmer nach § 19 UStG</option>
+              </select>
+            </label>
+            <label class="feld schmal">Satz %<input name="steuersatz" value="19"></label>
+            <label class="feld schmal">Ziel (Tage)<input name="zielTage" type="number" min="0" value="14"></label>
+          </div>
+          <div class="feldreihe">
+            <label class="feld">Präfix Rechnungsnummer<input name="praefix" placeholder="z. B. 2027-"></label>
+            <label class="feld schmal">Nächste Nr.<input name="naechsteNummer" type="number" min="1" value="1"></label>
+            <label class="feld schmal">Stellen<input name="stellen" type="number" min="1" max="8" value="3"></label>
+          </div>
+          <label class="feld breit">Standard-Schlusstext<textarea name="schlusstext" rows="2"></textarea></label>
+          <div class="logo-zeile">
+            <div>
+              <span class="feld-titel">Logo (PNG oder JPG)</span>
+              <input type="file" id="logo-datei" accept="image/png,image/jpeg">
+              <button type="button" class="knopf-text" id="logo-entfernen" hidden>Logo entfernen</button>
+            </div>
+            <img id="logo-vorschau" alt="" hidden>
+          </div>
+        </div>
+        <div class="knopfreihe"><button class="knopf" type="submit">Meine Daten speichern</button></div>
+      </form>
+
+      <aside class="spalte-seite">
+        <div class="karte">
+          <h2>Profil-Datei</h2>
+          <p class="klein">Ihre Absender-, Steuer- und Bankdaten als Datei, z. B. für einen zweiten Rechner.</p>
+          <div class="knopfreihe">
+            <button type="button" class="knopf-zweit" id="profil-export">Profil speichern</button>
+            <label class="knopf-zweit">Profil laden<input type="file" id="profil-import" accept=".json,application/json" hidden></label>
+          </div>
+        </div>
+        <div class="karte">
+          <h2>Sicherung</h2>
+          <p class="klein">Alle Daten liegen nur in diesem Browser. Löscht man den Browserspeicher, sind sie weg. Sichern Sie deshalb regelmäßig.</p>
+          <p class="klein" id="letzte-sicherung"></p>
+          <div class="knopfreihe">
+            <button type="button" class="knopf" id="sicherung-export">Komplettsicherung herunterladen</button>
+            <label class="knopf-zweit">Sicherung einspielen<input type="file" id="sicherung-import" accept=".json,application/json" hidden></label>
+          </div>
+          <button type="button" class="knopf-text gefahr" id="alles-loeschen">Alle Daten in diesem Browser löschen</button>
+        </div>
+      </aside>
+    </div>
+  </section>
+</main>
+
+<footer class="fuss">
+  <p><strong>Datenschutz:</strong> Diese Seite arbeitet vollständig in Ihrem Browser. Rechnungs-, Kunden- und Bankdaten werden nicht übertragen, es gibt keine Cookies und kein Tracking.</p>
+  <p><strong>Kein Steuerrat:</strong> Das Werkzeug prüft Format und Pflichtfelder nach den offiziellen Regeln von EN 16931 und XRechnung 3.0. Die steuerliche Einordnung bleibt Ihre Aufgabe. Es ersetzt keine Buchhaltung nach GoBD: Bewahren Sie versendete Rechnungen zusätzlich als Datei auf.</p>
+  <p>Open Source (MIT) auf <a href="https://github.com/reyschilling-ai/e-rechnung-de">GitHub</a> · <a href="lizenzen.html">Lizenzen</a> · <a href="https://schilling-vigilance.com">schilling-vigilance.com</a></p>
+</footer>
+
+<dialog id="dialog-zahlung" class="dialog">
+  <form method="dialog" id="form-zahlung">
+    <h2>Zahlungseingang erfassen</h2>
+    <p id="zahlung-info" class="klein"></p>
+    <label class="feld breit">Eingegangen am<input name="datum" type="date" required></label>
+    <label class="feld breit">Betrag<input name="betrag" inputmode="decimal" required></label>
+    <div class="knopfreihe">
+      <button class="knopf" value="ok">Speichern</button>
+      <button class="knopf-zweit" value="abbrechen" formnovalidate>Abbrechen</button>
+    </div>
+  </form>
+</dialog>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

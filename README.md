@@ -1,8 +1,27 @@
 # E-Rechnung DE
 
-Ein Werkzeug für alle, die ihre Rechnungen in Word schreiben und trotzdem E-Rechnungen verschicken wollen oder müssen. Es richtet sich vor allem an Freiberufler, Selbstständige und kleine Firmen.
+Ein Werkzeug für alle, die ihre Rechnungen selbst schreiben und trotzdem E-Rechnungen verschicken wollen oder müssen. Es richtet sich vor allem an Freiberufler, Selbstständige und kleine Firmen.
 
-Du trägst die Rechnungsdaten in eine kurze YAML-Datei ein. Das Werkzeug erzeugt daraus
+## Im Browser: https://reyschilling-ai.github.io/e-rechnung-de/
+
+Die einfachste Variante braucht keine Installation. Sie tragen Ihre Daten einmal ein, wählen einen Kunden, erfassen die Positionen und bekommen eine fertige PDF:
+
+- **E-Rechnung:** ZUGFeRD-PDF (PDF/A-3) mit eingebetteter XRechnung 3.0
+- **Nur PDF:** eine normale Rechnung als PDF/A, etwa für Privatkunden
+- **Rechnungsliste** mit Status offen, überfällig oder bezahlt und erfassten Zahlungseingängen
+- **Kundenliste**, Logo, fortlaufende Rechnungsnummern
+- **Eine frühere XRechnung einlesen** und als Vorlage nutzen
+- **Profil-Datei und Komplettsicherung** zum Mitnehmen auf einen anderen Rechner
+
+Alles läuft in Ihrem Browser, es gibt keinen Server und kein Konto. Rechnungs-, Kunden- und Bankdaten verlassen das Gerät nicht. Vor jeder E-Rechnung laufen die offiziellen Prüfregeln von EN 16931 und XRechnung 3.0 direkt im Browser. Sie stammen aus der KoSIT-Konfiguration und werden in den automatischen Tests Fall für Fall mit dem KoSIT-Validator abgeglichen. Die erzeugten PDFs prüft Mustang mit veraPDF.
+
+Die Daten liegen im Speicher dieses einen Browsers. Wer ihn leert, verliert sie. Die Seite erinnert deshalb an Sicherungen. Eine GoBD-konforme Buchhaltung ersetzt sie nicht.
+
+Der Code der Browser-Version liegt im Ordner [`web/`](web/).
+
+## Für die Kommandozeile
+
+Hier tragen Sie die Rechnungsdaten in eine kurze YAML-Datei ein. Das Werkzeug erzeugt daraus
 
 - eine **XRechnung 3.0** (XML im CII-Format) und
 - auf Wunsch eine **ZUGFeRD-PDF** (PDF/A-3 mit eingebettetem XML, Profil XRECHNUNG). Darin steckt deine gewohnte Rechnung als PDF, die du direkt aus Word oder LibreOffice mitgibst.
@@ -131,6 +150,8 @@ Die Werkzeuge werden nicht mit diesem Repo verteilt, sondern beim ersten Lauf vo
 
 - [KoSIT-Validator](https://github.com/itplr-kosit/validator) und [XRechnung-Konfiguration](https://github.com/itplr-kosit/validator-configuration-xrechnung) (Apache 2.0), die offizielle Prüfung der Koordinierungsstelle für IT-Standards
 - [Mustang](https://github.com/ZUGFeRD/mustangproject) (Apache 2.0) für Erzeugung und Prüfung von ZUGFeRD-PDFs
+
+Die Browser-Version bringt ihre Bestandteile im Ordner `web/` mit. Eine Übersicht steht auf der Seite [Lizenzen](web/lizenzen.html). Die aus den EN-16931-Artefakten abgeleitete Regeldatei `web/regeln/regeln.json` steht unter der EUPL 1.2.
 
 ## Lizenz
 

@@ -1,0 +1,17 @@
+{
+  "name": "e-rechnung-de-web",
+  "private": true,
+  "type": "module",
+  "description": "Browser-Version: Rechnungen und E-Rechnungen (XRechnung/ZUGFeRD) ohne Server",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "vendor": "esbuild tests/fontoxpath-entry.js --bundle --format=esm --minify --outfile=vendor/fontoxpath.js && cp node_modules/pdf-lib/dist/pdf-lib.min.js node_modules/@pdf-lib/fontkit/dist/fontkit.umd.min.js vendor/"
+  },
+  "devDependencies": {
+    "@pdf-lib/fontkit": "1.1.1",
+    "esbuild": "^0.25.0",
+    "fontoxpath": "3.34.0",
+    "pdf-lib": "1.17.1",
+    "slimdom-sax-parser": "^1.5.3"
+  }
+}

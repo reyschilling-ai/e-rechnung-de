@@ -4,3 +4,4 @@ __pycache__/
 ausgabe/
 *.pdf
 !beispiele/*.pdf
+web/node_modules/
