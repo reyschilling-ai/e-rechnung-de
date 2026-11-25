@@ -47,8 +47,8 @@ jobs:
           key: werkzeuge-${{ hashFiles('erechnung/werkzeuge.py') }}
       - name: Abhängigkeiten
         run: |
-          cd web && npm ci
           pip install -e . playwright
+          (cd web && npm ci)
           python -m playwright install --with-deps chromium
       - name: Kerntests und PDF-Erzeugung (Node)
         working-directory: web
