@@ -117,3 +117,27 @@ if fehler:
     print("Browserfehler:", *fehler, sep="\n  ")
     sys.exit(1)
 print("E2E OK")
+
+# Regression: Profil-Datei und Sicherung enthalten Eingaben auch ohne Klick auf „Meine Daten speichern“
+with sync_playwright() as pw:
+    browser = pw.chromium.launch(executable_path=sys.argv[3] if len(sys.argv) > 3 else None)
+    s = browser.new_page(accept_downloads=True)
+    s.on("dialog", lambda d: d.accept())
+    s.goto(basis + "/index.html")
+    s.locator("#form-profil [name=name]").fill("Ohne Speichern GmbH")
+    with s.expect_download() as d:
+        s.click("#profil-export")
+    assert json.load(open(d.value.path()))["profil"]["name"] == "Ohne Speichern GmbH", "Profil-Datei leer"
+    s.locator("#form-profil [name=ort]").fill("Musterstadt")
+    with s.expect_download() as d2:
+        s.click("#sicherung-export")
+    sicherung = d2.value.path()
+    profil = [e for e in json.load(open(sicherung))["einstellungen"] if e["id"] == "profil"][0]["wert"]
+    assert profil["ort"] == "Musterstadt", "Sicherung ohne aktuelle Eingabe"
+    s2 = browser.new_context().new_page()
+    s2.on("dialog", lambda d: d.accept())
+    s2.goto(basis + "/index.html")
+    s2.set_input_files("#sicherung-import", sicherung)
+    expect(s2.locator("#form-profil [name=name]")).to_have_value("Ohne Speichern GmbH")
+    browser.close()
+print("Regression Profil/Sicherung OK")

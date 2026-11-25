@@ -476,14 +476,34 @@ function profilFuellen() {
   } else { lv.hidden = true; $('#logo-entfernen').hidden = true; }
 }
 
-async function profilSpeichern() {
+// Meine Daten werden bei jeder Eingabe gespeichert, damit Profil-Datei und Sicherung
+// immer den aktuellen Stand enthalten. Ungültige Angaben werden markiert, aber nicht verworfen.
+async function profilUebernehmen() {
   const w = formWerte(formP);
-  if (w.iban && !ibanGueltig(w.iban)) { meldung('Die IBAN ist ungültig. Bitte prüfen.'); formP.iban.setAttribute('aria-invalid', 'true'); return; }
-  if (w.email && !emailGueltig(w.email)) { meldung('Die E-Mail-Adresse ist ungültig.'); return; }
+  formP.iban.toggleAttribute('aria-invalid', !!w.iban && !ibanGueltig(w.iban));
+  formP.email.toggleAttribute('aria-invalid', !!w.email && !emailGueltig(w.email));
+  if (formP.iban.hasAttribute('aria-invalid')) formP.iban.setAttribute('aria-invalid', 'true');
+  if (formP.email.hasAttribute('aria-invalid')) formP.email.setAttribute('aria-invalid', 'true');
   zustand.profil = { ...zustand.profil, ...w, iban: w.iban.replace(/\s/g, '').toUpperCase() };
   await db.setzeEinstellung('profil', zustand.profil);
-  profilFuellen();
-  if (!formR.nummer.value || formR.nummer.value === formR.nummer.dataset.vorschlag) formR.nummer.value = nummerVorschlag();
+  if (!formR.nummer.value || formR.nummer.value === formR.nummer.dataset.vorschlag) {
+    formR.nummer.value = nummerVorschlag();
+    formR.nummer.dataset.vorschlag = formR.nummer.value;
+  }
+}
+
+let profilTimer;
+function profilAutomatisch() {
+  clearTimeout(profilTimer);
+  profilTimer = setTimeout(profilUebernehmen, 400);
+}
+
+async function profilSpeichern() {
+  clearTimeout(profilTimer);
+  await profilUebernehmen();
+  const w = formWerte(formP);
+  if (w.iban && !ibanGueltig(w.iban)) { meldung('Gespeichert, aber die IBAN ist ungültig. Bitte prüfen.'); return; }
+  if (w.email && !emailGueltig(w.email)) { meldung('Gespeichert, aber die E-Mail-Adresse ist ungültig.'); return; }
   meldung('Meine Daten gespeichert.');
 }
 
@@ -573,6 +593,8 @@ async function start() {
   });
 
   formP.addEventListener('submit', (e) => { e.preventDefault(); profilSpeichern(); });
+  formP.addEventListener('input', profilAutomatisch);
+  formP.addEventListener('change', profilAutomatisch);
   $('#logo-datei').addEventListener('change', async (e) => {
     const f = e.target.files[0];
     if (!f) return;
@@ -587,7 +609,8 @@ async function start() {
   $('#logo-entfernen').addEventListener('click', async () => {
     delete zustand.profil.logo; await db.setzeEinstellung('profil', zustand.profil); profilFuellen();
   });
-  $('#profil-export').addEventListener('click', () => {
+  $('#profil-export').addEventListener('click', async () => {
+    clearTimeout(profilTimer); await profilUebernehmen();
     herunterladen(JSON.stringify({ format: 'e-rechnung-de-profil', version: 1, profil: zustand.profil }, null, 1), 'meine-rechnungsdaten.json', 'application/json');
   });
   $('#profil-import').addEventListener('change', async (e) => {
@@ -602,6 +625,8 @@ async function start() {
     } catch (err) { meldung(err.message, 6000); }
   });
   $('#sicherung-export').addEventListener('click', async () => {
+    clearTimeout(profilTimer); await profilUebernehmen();
+    clearTimeout(entwurfTimer); await entwurfSpeichern();
     herunterladen(await db.sicherungErstellen(), `e-rechnung-sicherung-${heute()}.json`, 'application/json');
     await db.setzeEinstellung('letzteSicherung', new Date().toISOString());
     letzteSicherungAnzeigen();
