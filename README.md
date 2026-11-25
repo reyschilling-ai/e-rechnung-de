@@ -9,6 +9,10 @@ Du trägst die Rechnungsdaten in eine kurze YAML-Datei ein. Das Werkzeug erzeugt
 
 Jedes Ergebnis wird sofort mit dem **offiziellen KoSIT-Validator** und mit **Mustang** geprüft. Was hier als „GÜLTIG“ herauskommt, besteht dieselben Prüfregeln wie bei Behörden und großen Rechnungsempfängern.
 
+![Beispielausgabe: XRechnung und ZUGFeRD-PDF erzeugt, beide Prüfungen gültig](docs/beispiel-ausgabe.svg)
+
+[![Tests](https://github.com/reyschilling-ai/e-rechnung-de/actions/workflows/tests.yml/badge.svg)](https://github.com/reyschilling-ai/e-rechnung-de/actions/workflows/tests.yml)
+
 > **Kein Steuerrat.** Das Werkzeug prüft Format und Pflichtfelder, nicht deine steuerliche Einordnung. Ob ein Umsatz steuerfrei, steuerpflichtig oder Reverse Charge ist, musst du selbst entscheiden oder mit deiner Steuerberatung klären. Nutzung auf eigenes Risiko.
 
 ## Muss ich überhaupt E-Rechnungen schreiben?
@@ -32,7 +36,7 @@ Freiwillig darfst du E-Rechnungen schon jetzt schicken. Viele große Kunden bitt
 Voraussetzungen: Python ab 3.10 und Java ab 11. Für die Umwandlung von Word-Dateien brauchst du außerdem LibreOffice; das ist optional.
 
 ```bash
-git clone https://github.com/<konto>/e-rechnung-de.git
+git clone https://github.com/reyschilling-ai/e-rechnung-de.git
 cd e-rechnung-de
 pip install -e .
 erechnung werkzeuge      # lädt KoSIT-Validator und Mustang einmalig herunter (~35 MB)
