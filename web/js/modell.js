@@ -155,9 +155,10 @@ export function pflichtangaben(r, { eRechnung }) {
     fehlt(k.ustId, 'Reverse Charge: USt-IdNr. des Kunden fehlt');
     fehlt(v.ustId, 'Reverse Charge: eigene USt-IdNr. fehlt');
   }
-  if (r.iban || eRechnung) {
+  if ((r.iban || eRechnung) && r.typ !== 'storno') {
     fehlt(ibanGueltig(r.iban), 'IBAN fehlt oder ist ungültig');
   }
+  if (r.typ === 'storno') fehlt(r.bezug?.nummer, 'Stornorechnung ohne Bezug auf die ursprüngliche Rechnung');
   if (eRechnung) {
     fehlt(emailGueltig(v.email), 'Meine Daten: gültige E-Mail-Adresse fehlt (Pflicht in XRechnung)');
     fehlt(String(v.telefon || '').replace(/\D/g, '').length >= 3, 'Meine Daten: Telefonnummer fehlt (Pflicht in XRechnung)');
@@ -168,6 +169,9 @@ export function pflichtangaben(r, { eRechnung }) {
 
 export function hinweiseFuer(r) {
   const h = [...(r.hinweise || [])].filter(Boolean);
+  if (r.typ === 'storno' && r.bezug?.nummer && !h.some((x) => x.includes(r.bezug.nummer))) {
+    h.unshift(`Stornorechnung zur Rechnung ${r.bezug.nummer}${r.bezug.datum ? ` vom ${datumDe(r.bezug.datum)}` : ''}. Die Rechnung wird hiermit vollständig storniert.`);
+  }
   const faelle = new Set(r.positionen.map((p) => p.steuerfall));
   if (faelle.has('kleinunternehmer') && !h.some((x) => x.includes('§ 19'))) h.unshift(HINWEIS_KLEINUNTERNEHMER);
   if (faelle.has('reverse_charge') && !h.some((x) => /Reverse Charge|13b/.test(x))) h.unshift(HINWEIS_REVERSE_CHARGE);
@@ -175,6 +179,7 @@ export function hinweiseFuer(r) {
 }
 
 export function zahlungsbedingungen(r) {
+  if (r.typ === 'storno') return 'Der Betrag wird erstattet oder mit offenen Forderungen verrechnet.';
   if (r.zahlungsbedingungen) return r.zahlungsbedingungen;
   if (r.zielTage !== undefined && r.zielTage !== '' && r.zielTage !== null) {
     return Number(r.zielTage) === 0 ? 'Zahlbar sofort ohne Abzug.' : `Zahlbar innerhalb von ${r.zielTage} Tagen ohne Abzug.`;
@@ -183,6 +188,7 @@ export function zahlungsbedingungen(r) {
 }
 
 export function faelligAm(r) {
+  if (r.typ === 'storno') return null;
   if (r.faelligAm) return r.faelligAm;
   if (r.datum && r.zielTage !== undefined && r.zielTage !== '' && r.zielTage !== null) return datumPlus(r.datum, r.zielTage);
   return null;

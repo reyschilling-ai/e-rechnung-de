@@ -15,7 +15,19 @@ Die einfachste Variante braucht keine Installation. Sie tragen Ihre Daten einmal
 
 Alles läuft in Ihrem Browser, es gibt keinen Server und kein Konto. Rechnungs-, Kunden- und Bankdaten verlassen das Gerät nicht. Vor jeder E-Rechnung laufen die offiziellen Prüfregeln von EN 16931 und XRechnung 3.0 direkt im Browser. Sie stammen aus der KoSIT-Konfiguration und werden in den automatischen Tests Fall für Fall mit dem KoSIT-Validator abgeglichen. Die erzeugten PDFs prüft Mustang mit veraPDF.
 
-Die Daten liegen im Speicher dieses einen Browsers. Wer ihn leert, verliert sie. Die Seite erinnert deshalb an Sicherungen. Eine GoBD-konforme Buchhaltung ersetzt sie nicht.
+Die Daten liegen im Speicher dieses einen Browsers. Wer ihn leert, verliert sie. Die Seite erinnert deshalb an Sicherungen.
+
+### GoBD: Festschreibung, Protokoll, Archiv
+
+Die Browser-Version unterstützt eine GoBD-konforme Arbeitsweise mit eigenem Speicher:
+
+- **Festschreibung:** Erstellte Rechnungen lassen sich nicht ändern oder löschen. Korrigiert wird mit einer Stornorechnung (bei E-Rechnungen eine geprüfte XRechnung der Art 381 mit Bezug auf das Original).
+- **Protokoll:** Jeder Vorgang wird mit Zeitstempel und SHA-256-Prüfsummen der erzeugten Dateien protokolliert. Die Einträge sind verkettet, nachträgliche Änderungen fallen auf. Lücken in den Rechnungsnummern werden angezeigt.
+- **Archivpaket pro Monat:** ZIP mit allen Rechnungen als PDF und XML, Rechnungsausgangsbuch (CSV mit index.xml nach dem Beschreibungsstandard), Protokoll und Prüfsummenliste. Die Seite erinnert an fehlende Monate. Ob ein Paket unverändert ist, prüft „Archivpaket prüfen“ oder `sha256sum -c pruefsummen.sha256`.
+- **Export für die Betriebsprüfung:** dasselbe Paket für ein ganzes Jahr.
+- **[Vorlage Verfahrensdokumentation](web/vorlagen/verfahrensdokumentation.md)** zum Ausfüllen.
+
+Ob der gesamte Ablauf den GoBD genügt, hängt auch davon ab, wo und wie die Archivpakete aufbewahrt werden. Das beschreibt die Verfahrensdokumentation. Steuerliche Beratung ersetzt das Werkzeug nicht.
 
 Der Code der Browser-Version liegt im Ordner [`web/`](web/).
 

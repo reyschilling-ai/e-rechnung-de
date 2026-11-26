@@ -146,6 +146,24 @@
       <div class="kennzahlen" id="kennzahlen"></div>
       <div class="tabelle-huelle"><table class="tabelle" id="tabelle-rechnungen"></table></div>
       <p class="leer" id="liste-leer" hidden>Noch keine Rechnungen. Die erste erstellen Sie unter „Rechnung schreiben“.</p>
+      <p class="klein">Erstellte Rechnungen sind festgeschrieben und lassen sich nicht mehr ändern oder löschen. Korrigieren Sie eine Rechnung mit „Storno“ und schreiben Sie bei Bedarf eine neue (z. B. über „Kopie“).</p>
+    </div>
+
+    <div class="karte" id="archiv">
+      <div class="karte-kopf"><h2>Archiv</h2><span class="klein" id="kette-status"></span></div>
+      <p class="klein">Laden Sie jeden Monat das Archivpaket herunter und legen Sie es unverändert in Ihren eigenen Speicher, am besten an zwei Orten. Es enthält alle Rechnungen als PDF und XML, das Rechnungsausgangsbuch, das Protokoll und Prüfsummen.</p>
+      <div class="feldreihe">
+        <label class="feld">Monat<select id="archiv-monat"></select></label>
+        <div class="knopfreihe"><button type="button" class="knopf" id="archiv-export">Archivpaket herunterladen</button></div>
+      </div>
+      <div id="archiv-offen" class="klein"></div>
+      <div class="knopfreihe">
+        <button type="button" class="knopf-zweit" id="pruefer-export">Export für Betriebsprüfung (Jahr)</button>
+        <button type="button" class="knopf-zweit" id="protokoll-zeigen">Protokoll ansehen</button>
+        <label class="knopf-zweit">Archivpaket prüfen<input type="file" id="archiv-pruefen" accept=".zip,application/zip" hidden></label>
+        <a class="knopf-zweit" href="vorlagen/verfahrensdokumentation.md" download="Verfahrensdokumentation-Vorlage.md">Vorlage Verfahrensdokumentation</a>
+      </div>
+      <div id="archiv-ergebnis" class="pruefliste" aria-live="polite"></div>
     </div>
   </section>
 
@@ -274,9 +292,16 @@
 
 <footer class="fuss">
   <p><strong>Datenschutz:</strong> Diese Seite arbeitet vollständig in Ihrem Browser. Rechnungs-, Kunden- und Bankdaten werden nicht übertragen, es gibt keine Cookies und kein Tracking. Bereitgestellt wird die Seite über GitHub Pages; GitHub verarbeitet dabei wie jeder Webserver technische Zugriffsdaten wie die IP-Adresse (<a href="https://docs.github.com/de/site-policy/privacy-policies/github-general-privacy-statement">Datenschutzerklärung von GitHub</a>).</p>
-  <p><strong>Kein Steuerrat:</strong> Das Werkzeug prüft Format und Pflichtfelder nach den offiziellen Regeln von EN 16931 und XRechnung 3.0. Die steuerliche Einordnung bleibt Ihre Aufgabe. Es ersetzt keine Buchhaltung nach GoBD: Bewahren Sie versendete Rechnungen zusätzlich als Datei auf.</p>
+  <p><strong>Kein Steuerrat:</strong> Das Werkzeug prüft Format und Pflichtfelder nach den offiziellen Regeln von EN 16931 und XRechnung 3.0. Die steuerliche Einordnung bleibt Ihre Aufgabe. Es unterstützt eine GoBD-konforme Arbeitsweise (Festschreibung, Protokoll mit Prüfsummen, Archivpakete); ob Ihr gesamter Ablauf den GoBD genügt, hängt auch von Ihrer Aufbewahrung ab.</p>
   <p>Open Source (MIT) auf <a href="https://github.com/reyschilling-ai/e-rechnung-de">GitHub</a> · <a href="lizenzen.html">Lizenzen</a> · <a href="https://schilling-vigilance.com/imprint">Impressum</a> · <a href="https://schilling-vigilance.com">schilling-vigilance.com</a></p>
 </footer>
+
+<dialog id="dialog-protokoll" class="dialog breit">
+  <form method="dialog">
+    <div class="karte-kopf"><h2>Protokoll</h2><button class="knopf-zweit" value="zu">Schließen</button></div>
+    <div id="protokoll-inhalt"></div>
+  </form>
+</dialog>
 
 <dialog id="dialog-zahlung" class="dialog">
   <form method="dialog" id="form-zahlung">

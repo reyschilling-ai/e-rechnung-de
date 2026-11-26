@@ -12,6 +12,7 @@ with sync_playwright() as pw:
     browser = pw.chromium.launch(executable_path=sys.argv[3] if len(sys.argv) > 3 else None)
     seite = browser.new_page(accept_downloads=True, viewport={"width": 1280, "height": 1000})
     seite.on("pageerror", lambda e: fehler.append(str(e)))
+    seite.on("dialog", lambda d: d.accept())
     seite.on("console", lambda m: fehler.append(m.text) if m.type == "error" else None)
     seite.goto(basis + "/index.html")
     expect(seite.locator("#tab-profil")).to_be_visible()  # Erststart -> Meine Daten
@@ -87,6 +88,35 @@ with sync_playwright() as pw:
     xml = ziel / "browser.xml"
     dx.value.save_as(xml)
 
+    # GoBD: kein Löschen, Storno statt Änderung
+    assert seite.locator("#tabelle-rechnungen button[data-aktion=loeschen]").count() == 0
+    with seite.expect_download(timeout=60000) as dst:
+        seite.locator("#tabelle-rechnungen tr", has_text="2027-001").locator("button[data-aktion=storno]").click()
+    dst.value.save_as(ziel / "zugferd_storno_browser.pdf")
+    expect(seite.locator("#tabelle-rechnungen tr", has_text="Storno zu 2027-001")).to_have_count(1)
+    expect(seite.locator("#tabelle-rechnungen tr", has_text="storniert (2027-003)")).to_have_count(1)
+    seite.screenshot(path=str(ziel / "4b_storno.png"), full_page=True)
+
+    # Protokoll
+    seite.click("#protokoll-zeigen")
+    expect(seite.locator("#protokoll-inhalt")).to_contain_text("Prüfsummenkette intakt")
+    seite.screenshot(path=str(ziel / "4c_protokoll.png"))
+    seite.locator("#dialog-protokoll button[value=zu]").click()
+
+    # Archivpaket erzeugen und prüfen
+    with seite.expect_download() as da:
+        seite.click("#archiv-export")
+    archiv = ziel / "archiv.zip"
+    da.value.save_as(archiv)
+    import zipfile
+    namen = zipfile.ZipFile(archiv).namelist()
+    for pflicht in ("rechnungsausgangsbuch.csv", "index.xml", "protokoll.json", "pruefsummen.sha256", "LIESMICH.txt"):
+        assert pflicht in namen, (pflicht, namen)
+    assert sum(n.startswith("rechnungen/") and n.endswith(".pdf") for n in namen) == 3, namen
+    seite.set_input_files("#archiv-pruefen", str(archiv))
+    expect(seite.locator("#archiv-ergebnis")).to_contain_text("unverändert")
+    seite.screenshot(path=str(ziel / "4d_archiv.png"), full_page=True)
+
     # Kunden
     seite.click("button[data-tab=kunden]")
     expect(seite.locator("#tabelle-kunden tbody tr")).to_have_count(2)
@@ -105,7 +135,8 @@ with sync_playwright() as pw:
     sich = ziel / "sicherung.json"
     ds.value.save_as(sich)
     d = json.loads(sich.read_text())
-    assert len(d["rechnungen"]) == 2 and len(d["kunden"]) == 2, d.keys()
+    assert len(d["rechnungen"]) == 3 and len(d["kunden"]) == 2, d.keys()
+    assert len(d["protokoll"]) >= 6, len(d["protokoll"])
 
     # Mobile Ansicht
     seite.set_viewport_size({"width": 390, "height": 844})

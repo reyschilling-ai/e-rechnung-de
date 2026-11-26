@@ -161,8 +161,9 @@ export async function pdfErzeugen(libs, r, opt) {
 
   // Informationsblock rechts
   const info = [
-    ['Rechnungsnummer', r.nummer],
-    ['Rechnungsdatum', datumDe(r.datum)],
+    [r.typ === 'storno' ? 'Stornonummer' : 'Rechnungsnummer', r.nummer],
+    r.typ === 'storno' && r.bezug ? ['Zur Rechnung', `${r.bezug.nummer}${r.bezug.datum ? ' vom ' + datumDe(r.bezug.datum) : ''}`] : null,
+    [r.typ === 'storno' ? 'Datum' : 'Rechnungsdatum', datumDe(r.datum)],
     r.leistungsdatum ? ['Leistungsdatum', datumDe(r.leistungsdatum)] : null,
     (r.zeitraumVon && r.zeitraumBis) ? ['Leistungszeitraum', `${datumDe(r.zeitraumVon)} – ${datumDe(r.zeitraumBis)}`] : null,
     r.kaeuferreferenz ? ['Ihre Referenz', r.kaeuferreferenz] : null,
@@ -178,7 +179,7 @@ export async function pdfErzeugen(libs, r, opt) {
   }
 
   y = Math.min(ya, yi) - 12 * MM;
-  text(`Rechnung ${r.nummer}`, RAND_L, y, { font: fett, groesse: 15 });
+  text(`${r.typ === 'storno' ? 'Stornorechnung' : 'Rechnung'} ${r.nummer}`, RAND_L, y, { font: fett, groesse: 15 });
   y -= 10 * MM;
   if (r.anschreiben) {
     for (const z of umbrechen(r.anschreiben, normal, 9.5, BREITE)) { text(z, RAND_L, y); y -= 4.6 * MM; }
@@ -237,7 +238,7 @@ export async function pdfErzeugen(libs, r, opt) {
   }
   linie(y + 3.2 * MM, xl, A4[0] - RAND_R, FARBE_TEXT, 0.8);
   y -= 0.8 * MM;
-  summe('Rechnungsbetrag', euro(b.brutto, r.waehrung), true);
+  summe(r.typ === 'storno' ? 'Stornobetrag' : 'Rechnungsbetrag', euro(b.brutto, r.waehrung), true);
   y -= 4 * MM;
 
   // ---------- Hinweise und Zahlung ----------
@@ -250,7 +251,7 @@ export async function pdfErzeugen(libs, r, opt) {
   for (const h of hinweiseFuer(r)) absatz(h);
   const faellig = faelligAm(r);
   absatz(zahlungsbedingungen(r) + (faellig ? ` Fällig am ${datumDe(faellig)}.` : ''));
-  if (r.iban) {
+  if (r.iban && r.typ !== 'storno') {
     absatz(`Bitte überweisen Sie den Betrag unter Angabe der Rechnungsnummer ${r.nummer} auf folgendes Konto: ` +
       `${r.kontoinhaber || v.name}, IBAN ${String(r.iban).replace(/\s/g, '').replace(/(.{4})/g, '$1 ').trim()}` +
       (r.bic ? `, BIC ${r.bic}` : '') + '.');
@@ -276,7 +277,7 @@ export async function pdfErzeugen(libs, r, opt) {
   });
 
   // ---------- PDF/A-3 ----------
-  const titel = `Rechnung ${r.nummer}`;
+  const titel = `${r.typ === 'storno' ? 'Stornorechnung' : 'Rechnung'} ${r.nummer}`;
   const producer = 'e-rechnung-de (pdf-lib)';
   const creator = 'e-rechnung-de';
   const datumIso = jetzt.toISOString().replace(/\.\d{3}Z$/, 'Z');

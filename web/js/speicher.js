@@ -2,8 +2,8 @@
 // wenn IndexedDB nicht verfügbar ist (z. B. in manchen privaten Fenstern).
 
 const DB_NAME = 'e-rechnung-de';
-const DB_VERSION = 1;
-const STORES = ['einstellungen', 'kunden', 'rechnungen'];
+const DB_VERSION = 2;
+const STORES = ['einstellungen', 'kunden', 'rechnungen', 'protokoll'];
 
 let dbPromise = null;
 let fluechtig = null;

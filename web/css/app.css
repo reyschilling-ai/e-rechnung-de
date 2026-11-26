@@ -174,3 +174,10 @@ input[aria-invalid="true"] { border-color: var(--schlecht); background: var(--sc
 .fuss p { margin: 6px 0; }
 
 .meldung { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: var(--text); color: #fff; padding: 10px 16px; border-radius: 8px; font-size: .9rem; box-shadow: var(--schatten); z-index: 10; max-width: 90vw; }
+
+.dialog.breit { width: min(980px, 96vw); }
+.protokoll-tabelle td { font-size: .82rem; }
+.protokoll-tabelle code { font-size: .74rem; color: var(--text-leise); }
+.marke-status.storniert, .marke-status.storno { background: #eceae4; color: var(--text-leise); }
+#archiv .feldreihe { align-items: flex-end; }
+#archiv .knopfreihe .knopf { margin-top: 0; }

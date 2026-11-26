@@ -36,3 +36,9 @@ export const BEISPIELE = {
     positionen: [{ bezeichnung: 'Online-Training "GVP-Grundlagen"', menge: '1', einheit: 'LS', einzelpreis: '1200', steuerfall: 'reverse_charge' }],
   },
 };
+
+// Stornorechnung zur Regelbesteuerten Beispielrechnung
+export const STORNO = {
+  ...BEISPIELE.regelbesteuert, typ: 'storno', nummer: '2027-004', datum: '2027-02-10',
+  bezug: { nummer: '2027-002', datum: '2027-02-01' },
+};

@@ -8,7 +8,7 @@ import { sync as parse } from 'slimdom-sax-parser';
 import { berechnen, pflichtangaben, ibanGueltig, euro } from '../js/modell.js';
 import { erzeugen, einlesen } from '../js/cii.js';
 import { Pruefer } from '../js/pruefung.js';
-import { BEISPIELE } from './beispiele.mjs';
+import { BEISPIELE, STORNO } from './beispiele.mjs';
 
 const regeln = JSON.parse(fs.readFileSync(new URL('../regeln/regeln.json', import.meta.url)));
 const pruefer = new Pruefer(Object.entries(regeln).map(([name, r]) => ({ name, ...r })));
@@ -27,7 +27,7 @@ test('IBAN-Prüfziffer', () => {
   assert.ok(!ibanGueltig('DE00370400440532013000'));
 });
 
-for (const [name, r] of Object.entries(BEISPIELE)) {
+for (const [name, r] of Object.entries({ ...BEISPIELE, storno: STORNO })) {
   test(`${name}: Pflichtangaben vollständig, offizielle Regeln bestanden, Rundlauf`, () => {
     assert.deepEqual(pflichtangaben(r, { eRechnung: true }), []);
     const xml = erzeugen(r);

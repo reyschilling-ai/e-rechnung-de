@@ -13,6 +13,7 @@ const PEPPOL = 'urn:fdc:peppol.eu:2017:poacc:billing:01:1.0';
 
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const d102 = (iso) => iso.replace(/-/g, '');
+export const istStorno = (r) => r.typ === 'storno';
 
 class Schreiber {
   constructor() { this.teile = []; this.tiefe = 0; }
@@ -62,7 +63,7 @@ export function erzeugen(r) {
     .auf('ram:BusinessProcessSpecifiedDocumentContextParameter').el('ram:ID', PEPPOL).zu('ram:BusinessProcessSpecifiedDocumentContextParameter')
     .auf('ram:GuidelineSpecifiedDocumentContextParameter').el('ram:ID', XRECHNUNG_3).zu('ram:GuidelineSpecifiedDocumentContextParameter')
     .zu('rsm:ExchangedDocumentContext');
-  w.auf('rsm:ExchangedDocument').el('ram:ID', r.nummer).el('ram:TypeCode', '380').datum('ram:IssueDateTime', r.datum);
+  w.auf('rsm:ExchangedDocument').el('ram:ID', r.nummer).el('ram:TypeCode', istStorno(r) ? '381' : '380').datum('ram:IssueDateTime', r.datum);
   for (const h of hinweiseFuer(r)) w.auf('ram:IncludedNote').el('ram:Content', h).zu('ram:IncludedNote');
   w.zu('rsm:ExchangedDocument');
 
@@ -92,11 +93,17 @@ export function erzeugen(r) {
   w.zu('ram:ApplicableHeaderTradeDelivery');
 
   w.auf('ram:ApplicableHeaderTradeSettlement').el('ram:PaymentReference', r.nummer).el('ram:InvoiceCurrencyCode', wae);
-  w.auf('ram:SpecifiedTradeSettlementPaymentMeans').el('ram:TypeCode', '58')
-    .auf('ram:PayeePartyCreditorFinancialAccount').el('ram:IBANID', String(r.iban).replace(/\s/g, '').toUpperCase())
-    .el('ram:AccountName', r.kontoinhaber || r.verkaeufer.name).zu('ram:PayeePartyCreditorFinancialAccount');
-  if (r.bic) w.auf('ram:PayeeSpecifiedCreditorFinancialInstitution').el('ram:BICID', r.bic.replace(/\s/g, '')).zu('ram:PayeeSpecifiedCreditorFinancialInstitution');
-  w.zu('ram:SpecifiedTradeSettlementPaymentMeans');
+  if (istStorno(r)) {
+    // Stornorechnung: Erstattung bzw. Verrechnung; keine Zahlung an den Rechnungssteller
+    w.auf('ram:SpecifiedTradeSettlementPaymentMeans').el('ram:TypeCode', r.zahlungsartStorno || '1')
+      .el('ram:Information', 'Erstattung oder Verrechnung des stornierten Betrags').zu('ram:SpecifiedTradeSettlementPaymentMeans');
+  } else {
+    w.auf('ram:SpecifiedTradeSettlementPaymentMeans').el('ram:TypeCode', '58')
+      .auf('ram:PayeePartyCreditorFinancialAccount').el('ram:IBANID', String(r.iban).replace(/\s/g, '').toUpperCase())
+      .el('ram:AccountName', r.kontoinhaber || r.verkaeufer.name).zu('ram:PayeePartyCreditorFinancialAccount');
+    if (r.bic) w.auf('ram:PayeeSpecifiedCreditorFinancialInstitution').el('ram:BICID', r.bic.replace(/\s/g, '')).zu('ram:PayeeSpecifiedCreditorFinancialInstitution');
+    w.zu('ram:SpecifiedTradeSettlementPaymentMeans');
+  }
   for (const g of b.steuern) {
     w.auf('ram:ApplicableTradeTax').el('ram:CalculatedAmount', centText(g.steuer)).el('ram:TypeCode', 'VAT')
       .el('ram:ExemptionReason', g.grund).el('ram:BasisAmount', centText(g.basis)).el('ram:CategoryCode', g.kategorie)
@@ -111,6 +118,11 @@ export function erzeugen(r) {
     .el('ram:TaxTotalAmount', centText(b.steuer), { currencyID: wae })
     .el('ram:GrandTotalAmount', centText(b.brutto)).el('ram:DuePayableAmount', centText(b.brutto))
     .zu('ram:SpecifiedTradeSettlementHeaderMonetarySummation');
+  if (istStorno(r) && r.bezug?.nummer) {
+    w.auf('ram:InvoiceReferencedDocument').el('ram:IssuerAssignedID', r.bezug.nummer);
+    if (r.bezug.datum) w.auf('ram:FormattedIssueDateTime').el('qdt:DateTimeString', d102(r.bezug.datum), { format: '102' }).zu('ram:FormattedIssueDateTime');
+    w.zu('ram:InvoiceReferencedDocument');
+  }
   w.zu('ram:ApplicableHeaderTradeSettlement');
   w.zu('rsm:SupplyChainTradeTransaction');
   w.zu('rsm:CrossIndustryInvoice');
@@ -179,7 +191,12 @@ export function einlesen(xmlText, parser = new DOMParser()) {
   });
   const bekannteHinweise = [/§ 19/, /Reverse Charge/];
   const ref = t(ag, 'ram:BuyerReference');
+  const bezugDok = q(st, 'ram:InvoiceReferencedDocument')[0];
+  const bezugDatum = bezugDok ? t(bezugDok, 'ram:FormattedIssueDateTime/qdt:DateTimeString') : '';
   return {
+    typ: t(dok, 'ram:TypeCode') === '381' ? 'storno' : 'rechnung',
+    bezug: bezugDok ? { nummer: t(bezugDok, 'ram:IssuerAssignedID'),
+      datum: /^\d{8}$/.test(bezugDatum) ? `${bezugDatum.slice(0, 4)}-${bezugDatum.slice(4, 6)}-${bezugDatum.slice(6, 8)}` : '' } : null,
     nummer: t(dok, 'ram:ID'), datum: datumAus(dok, 'ram:IssueDateTime'),
     leistungsdatum: datumAus(q(tx, 'ram:ApplicableHeaderTradeDelivery/ram:ActualDeliverySupplyChainEvent')[0] || tx, 'ram:OccurrenceDateTime'),
     zeitraumVon: datumAus(q(st, 'ram:BillingSpecifiedPeriod')[0] || st, 'ram:StartDateTime'),

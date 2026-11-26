@@ -8,14 +8,14 @@ import * as PDFLib from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
 import { erzeugen } from '../js/cii.js';
 import { pdfErzeugen } from '../js/pdf.js';
-import { BEISPIELE } from './beispiele.mjs';
+import { BEISPIELE, STORNO } from './beispiele.mjs';
 
 const lies = (p) => new Uint8Array(fs.readFileSync(new URL(p, import.meta.url)));
 const opt = { schriften: { normal: lies('../assets/LiberationSans-Regular.ttf'), fett: lies('../assets/LiberationSans-Bold.ttf') },
   icc: lies('../assets/sRGB.icc'), jetzt: new Date('2027-01-15T10:00:00Z') };
 const ziel = process.env.PDF_AUSGABE || fs.mkdtempSync('/tmp/pdf-');
 
-for (const [name, r] of Object.entries(BEISPIELE)) {
+for (const [name, r] of Object.entries({ ...BEISPIELE, storno: STORNO })) {
   test(`${name}: ZUGFeRD-PDF und reine PDF`, async () => {
     const xml = erzeugen(r);
     const mit = await pdfErzeugen({ PDFLib, fontkit }, r, { ...opt, xml });
@@ -25,7 +25,7 @@ for (const [name, r] of Object.entries(BEISPIELE)) {
     fs.writeFileSync(path.join(ziel, `nurpdf_${name}.pdf`), ohne);
     assert.ok(mit.length > 5000);
     const geladen = await PDFLib.PDFDocument.load(mit);
-    assert.equal(geladen.getTitle(), `Rechnung ${r.nummer}`);
+    assert.equal(geladen.getTitle(), `${r.typ === 'storno' ? 'Stornorechnung' : 'Rechnung'} ${r.nummer}`);
   });
 }
 
